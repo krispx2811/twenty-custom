@@ -1,0 +1,198 @@
+<!-- CRMALARAMI: Print Invoice PDF button + Omani Rial symbol.
+     Injected into Twenty's index.html at build time. Auth uses the logged-in
+     user's own session token from localStorage (no secret is baked into the page). -->
+<script>
+(function () {
+  'use strict';
+
+  // ---- EDIT YOUR COMPANY DETAILS HERE ----
+  const CO = {
+    companyName: "AL ARAIMI",
+    tagline: "Oman's trusted real estate platform. Find properties for sale and rent across all governorates.",
+    addressLines: ["Muscat Grand Mall, Floor G, Al Khuwair", "Muscat, Sultanate of Oman"],
+    phone: "+968 77133177 / +968 72228271",
+    email: "info@alaraimi.co",
+    website: "alaraimi.co",
+    vatNumber: "",               // fill in when you have it (line hides while empty)
+    crNumber: "",
+    logoDataUrl: "",             // paste a "data:image/png;base64,..." string to show a logo
+    accentColor: "#1a3b6f",
+    bankName: "",                // fill in for the Payment Details box (hides while empty)
+    bankAccountName: "",
+    iban: "",
+    footerNote: "Thank you for choosing AL ARAIMI."
+  };
+  const RIAL_B64 = "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";
+  const RIAL_WHITE_B64 = "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";
+  // ----------------------------------------
+
+  const API = location.origin + "/rest";
+  const esc = (x) => String(x == null ? "" : x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // Read the logged-in user's own token from where Twenty's frontend stores it.
+  function getToken() {
+    try {
+      const pair = JSON.parse(localStorage.getItem("tokenPairState") || "null");
+      return pair && pair.accessOrWorkspaceAgnosticToken && pair.accessOrWorkspaceAgnosticToken.token;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function invoiceIdFromUrl() {
+    const m = location.pathname.match(/\/object\/invoice\/([0-9a-f-]{36})/i);
+    return m ? m[1] : null;
+  }
+
+  async function fetchInvoice(id) {
+    const token = getToken();
+    if (!token) throw new Error("You are not signed in.");
+    const r = await fetch(`${API}/invoices/${id}?depth=1`, { headers: { Authorization: "Bearer " + token } });
+    const j = await r.json();
+    return j.data ? j.data.invoice || j.data : j;
+  }
+
+  function renderHtml(inv) {
+    const a = CO.accentColor;
+    const bt = inv.billTo || {}, nm = bt.name || {};
+    const client = ((nm.firstName || "") + " " + (nm.lastName || "")).trim() || "—";
+    const email = (bt.emails || {}).primaryEmail || "";
+    const ph = bt.phones || {};
+    const phone = ((ph.primaryPhoneCallingCode || "") + " " + (ph.primaryPhoneNumber || "")).trim();
+    const net = (inv.amount || {}).amountMicros ? inv.amount.amountMicros / 1e6 : 0;
+    const rate = inv.vatRate != null ? inv.vatRate : 5;
+    const vat = (inv.vatAmount || {}).amountMicros != null ? inv.vatAmount.amountMicros / 1e6 : +(net * rate / 100).toFixed(3);
+    const total = (inv.totalAmount || {}).amountMicros != null ? inv.totalAmount.amountMicros / 1e6 : net + vat;
+    const title = (s) => (s || "").toLowerCase().replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const itype = title(inv.invoiceType) || "Service";
+    const status = title(inv.invoiceStatus);
+    const paid = inv.invoiceStatus === "PAID";
+
+    // rich property description built from the linked property's details
+    const p = inv.property || {};
+    const pname = p.name || "";
+    const specs = [];
+    if (p.propertyType) specs.push(title(p.propertyType));
+    if (p.bedrooms) specs.push(p.bedrooms + " Bed");
+    if (p.bathrooms) specs.push(p.bathrooms + " Bath");
+    if (p.areaSqm != null) specs.push(Number(p.areaSqm).toLocaleString() + " m²"); else if (p.areaSqft) specs.push(Math.round(p.areaSqft * 0.092903).toLocaleString() + " m²");
+    if (p.yearBuilt) specs.push("Built " + p.yearBuilt);
+    const pa = p.propertyAddress || {};
+    const addressStr = [pa.addressStreet1, pa.addressCity, pa.addressState, pa.addressPostcode].filter(Boolean).join(", ");
+    const amenities = (p.amenities || []).map(title).join(", ");
+    let period = "";
+    if (inv.invoiceDate) { const d = new Date(inv.invoiceDate); if (!isNaN(d.getTime())) period = d.toLocaleDateString("en-US", { month: "long", year: "numeric" }); }
+    const dline = (label, val) => val ? `<div style="color:#6b7280;font-size:12px;margin-top:3px"><span style="color:#9ca3af">${label}:</span> ${esc(val)}</div>` : "";
+    const descHtml =
+      `<div style="font-weight:600;color:#111827;font-size:13px">${esc(itype)}${pname ? " — " + esc(pname) : ""}</div>` +
+      (specs.length ? `<div style="color:#374151;font-size:12px;margin-top:4px">${esc(specs.join("  ·  "))}</div>` : "") +
+      dline("Location", addressStr) +
+      (inv.invoiceType === "RENT" && period ? dline("Rental period", period) : "") +
+      dline("Amenities", amenities) +
+      (p.propertyDescription ? `<div style="color:#6b7280;font-size:12px;margin-top:5px;line-height:1.5">${esc(p.propertyDescription)}</div>` : "");
+
+    const logo = CO.logoDataUrl ? `<img style="max-height:64px;max-width:220px" src="${CO.logoDataUrl}">`
+      : `<div style="font-size:26px;font-weight:800;letter-spacing:1.5px;color:${a}">${esc(CO.companyName)}</div>`;
+    const addr = (CO.addressLines || []).map(l => `<div>${esc(l)}</div>`).join("");
+    const vatLine = (CO.vatNumber || CO.crNumber)
+      ? `<div>${CO.vatNumber ? "VAT: " + esc(CO.vatNumber) : ""}${CO.vatNumber && CO.crNumber ? " · " : ""}${CO.crNumber ? "CR: " + esc(CO.crNumber) : ""}</div>` : "";
+    const payHtml = (CO.iban || CO.bankName)
+      ? `<div class="pay"><h3>Payment Details</h3>${CO.bankName ? `<div>${esc(CO.bankName)}${CO.bankAccountName ? " — " + esc(CO.bankAccountName) : ""}</div>` : ""}${CO.iban ? `<div>IBAN: ${esc(CO.iban)}</div>` : ""}</div>` : "";
+    const f = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    const RIAL = '<img src="data:image/png;base64,' + RIAL_B64 + '" style="height:0.9em;width:auto;vertical-align:-0.12em;margin-right:3px" alt="OMR">';
+    return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(inv.name)}</title><style>
+      @page{size:A4;margin:16mm} *{box-sizing:border-box}
+      body{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:#1f2937;margin:0;font-size:13px;line-height:1.5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .sheet{max-width:780px;margin:0 auto;padding:28px}
+      .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid ${a};padding-bottom:18px}
+      .co{text-align:right;font-size:11px;color:#4b5563}.co .name{font-size:14px;font-weight:700;color:#111827}
+      .tagline{color:#6b7280;font-size:11px;margin-top:6px;max-width:360px;line-height:1.5}
+      .title-row{display:flex;justify-content:space-between;align-items:flex-start;margin:26px 0 8px}
+      h1{font-size:30px;letter-spacing:2px;margin:0;color:${a}} .meta{text-align:right;font-size:12px}.meta b{color:#111827}
+      .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700}
+      .paid{background:#dcfce7;color:#166534}.unpaid{background:#fef9c3;color:#854d0e}
+      .parties{display:flex;gap:24px;margin:22px 0}.box{flex:1;background:#f9fafb;border:1px solid #eef2f7;border-radius:8px;padding:12px 14px}
+      .box h3{margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b7280}.box .big{font-weight:600;font-size:14px;color:#111827}
+      table{width:100%;border-collapse:collapse;margin-top:10px}th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b7280;border-bottom:2px solid #e5e7eb;padding:8px 6px}
+      td{padding:12px 6px;border-bottom:1px solid #f1f5f9}.r{text-align:right}
+      .totals{width:280px;margin-left:auto;margin-top:14px}.totals div{display:flex;justify-content:space-between;padding:6px 0}
+      .grand{border-top:2px solid ${a};margin-top:6px;padding-top:10px;font-size:17px;font-weight:700;color:${a}}
+      .pay{margin-top:26px;background:#f9fafb;border-radius:8px;padding:14px;font-size:12px}.pay h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:${a}}
+      .foot{margin-top:22px;text-align:center;color:#9ca3af;font-size:11px;border-top:1px solid #eef2f7;padding-top:14px}
+    </style></head><body><div class="sheet">
+      <div class="top"><div>${logo}<div class="tagline">${esc(CO.tagline)}</div></div>
+       <div class="co"><div class="name">${esc(CO.companyName)}</div>${addr}
+        <div>${esc(CO.phone)}</div><div>${esc(CO.email)}</div>${vatLine}</div></div>
+      <div class="title-row"><h1>INVOICE</h1><div class="meta"><div><b>${esc(inv.name)}</b></div>
+        <div>Issued: ${esc(inv.invoiceDate)}</div><div>Due: ${esc(inv.dueDate)}</div>
+        ${paid ? `<div style="margin-top:6px"><span class="badge paid">${esc(status)}</span></div>` : ""}</div></div>
+      <div class="parties"><div class="box"><h3>Bill To</h3><div class="big">${esc(client)}</div><div>${esc(email)}</div><div>${esc(phone)}</div></div></div>
+      <table><thead><tr><th>Description</th><th class="r">Qty</th><th class="r">Amount</th></tr></thead>
+       <tbody><tr><td>${descHtml}</td><td class="r" style="vertical-align:top">1</td><td class="r" style="vertical-align:top">${RIAL}${f(net)}</td></tr></tbody></table>
+      <div class="totals"><div><span>Subtotal</span><span>${RIAL}${f(net)}</span></div>
+       <div><span>VAT (${esc(rate)}%)</span><span>${RIAL}${f(vat)}</span></div>
+       <div class="grand"><span>Total</span><span>${RIAL}${f(total)}</span></div></div>
+      ${payHtml}
+      <div class="foot">${esc(CO.footerNote)}<br>${esc(CO.companyName)} · ${esc(CO.website)}</div>
+    </div><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`;
+  }
+
+  async function printInvoice() {
+    const id = invoiceIdFromUrl();
+    if (!id) return alert("Open an invoice first, then click Print PDF.");
+    const btn = document.getElementById("tw-print-pdf");
+    if (btn) btn.textContent = "Preparing…";
+    try {
+      const inv = await fetchInvoice(id);
+      const w = window.open("", "_blank");
+      w.document.write(renderHtml(inv));
+      w.document.close();
+    } catch (e) {
+      alert("Could not build the invoice PDF: " + e.message);
+    } finally {
+      if (btn) btn.textContent = "Print PDF";
+    }
+  }
+
+  function ensureButton() {
+    const onInvoice = !!invoiceIdFromUrl();
+    let btn = document.getElementById("tw-print-pdf");
+    if (onInvoice && !btn) {
+      btn = document.createElement("button");
+      btn.id = "tw-print-pdf";
+      btn.textContent = "Print PDF";
+      btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:99999;font-family:Inter,sans-serif;" +
+        "background:#3E63DD;color:#fff;border:1px solid rgba(0,0,0,.08);padding:8px 14px;border-radius:6px;" +
+        "font-weight:500;font-size:13px;line-height:1;letter-spacing:normal;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.12)";
+      btn.onmouseenter = () => { btn.style.background = "#3A5CCC"; };
+      btn.onmouseleave = () => { btn.style.background = "#3E63DD"; };
+      btn.onclick = printInvoice;
+      document.body.appendChild(btn);
+    } else if (!onInvoice && btn) {
+      btn.remove();
+    }
+  }
+
+  // Replace Twenty's generic "coins" icon (used for OMR) with the Omani Rial symbol.
+  // Paint it as a mask filled with the icon's own colour so it follows the theme.
+  function ensureRialStyle() {
+    if (document.getElementById("crmalarami-rial")) return;
+    const st = document.createElement("style");
+    st.id = "crmalarami-rial";
+    const u = 'url("data:image/png;base64,' + RIAL_B64 + '")';
+    st.textContent =
+      'svg.tabler-icon-coins{' +
+      '-webkit-mask-image:' + u + ';mask-image:' + u + ';' +
+      '-webkit-mask-size:contain;mask-size:contain;' +
+      '-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;' +
+      '-webkit-mask-position:center;mask-position:center;' +
+      'background-color:currentColor!important;background-image:none!important}' +
+      'svg.tabler-icon-coins>*{display:none!important}';
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  setInterval(() => { ensureButton(); ensureRialStyle(); }, 800);
+  ensureButton();
+  ensureRialStyle();
+})();
+</script>

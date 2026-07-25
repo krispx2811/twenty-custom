@@ -1,0 +1,89 @@
+name: Build custom CRM image
+
+# Builds Twenty v2.22.0 from upstream + the CRMALARAMI customizations and pushes
+# the image to GHCR. Railway pulls this image instead of the stock twentycrm/twenty.
+# This repo holds only the build recipe + UI overlay - no secrets, no data.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - crm-custom/**
+      - .github/workflows/build-custom-crm.yaml
+  workflow_dispatch:
+    inputs:
+      twenty_ref:
+        description: Twenty version tag to build from
+        default: v2.22.0
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  TWENTY_REF: ${{ github.event.inputs.twenty_ref || 'v2.22.0' }}
+  IMAGE: ghcr.io/krispx2811/twenty-custom
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force || true
+          df -h /
+
+      - name: Checkout customizations
+        uses: actions/checkout@v4
+        with:
+          path: fork
+
+      - name: Checkout Twenty ${{ env.TWENTY_REF }}
+        uses: actions/checkout@v4
+        with:
+          repository: twentyhq/twenty
+          ref: ${{ env.TWENTY_REF }}
+          path: twenty
+
+      - name: Inject Print PDF + Rial customization into index.html
+        run: |
+          node -e '
+            const fs = require("fs");
+            const idx = "twenty/packages/twenty-front/index.html";
+            const inj = fs.readFileSync("fork/crm-custom/print-invoice.inject.html", "utf8");
+            let html = fs.readFileSync(idx, "utf8");
+            if (!html.includes("</body>")) throw new Error("no </body> found in " + idx);
+            if (html.includes("tw-print-pdf")) throw new Error("customization already present");
+            html = html.replace("</body>", inj + "\n  </body>");
+            fs.writeFileSync(idx, html);
+            console.log("Injected customization into " + idx);
+          '
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: twenty
+          file: twenty/packages/twenty-docker/twenty/Dockerfile
+          target: twenty
+          push: true
+          provenance: false
+          tags: |
+            ${{ env.IMAGE }}:2.22.0
+            ${{ env.IMAGE }}:2.22.0-${{ github.run_number }}
+
+      - name: Summary
+        run: |
+          echo "Pushed ${{ env.IMAGE }}:2.22.0 and :2.22.0-${{ github.run_number }}" >> "$GITHUB_STEP_SUMMARY"
