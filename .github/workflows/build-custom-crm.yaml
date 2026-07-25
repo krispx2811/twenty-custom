@@ -14,7 +14,7 @@ on:
     inputs:
       twenty_ref:
         description: Twenty version tag to build from
-        default: v2.22.0
+        default: twenty/v2.22.0
         required: true
 
 permissions:
@@ -22,7 +22,7 @@ permissions:
   packages: write
 
 env:
-  TWENTY_REF: ${{ github.event.inputs.twenty_ref || 'v2.22.0' }}
+  TWENTY_REF: ${{ github.event.inputs.twenty_ref || 'twenty/v2.22.0' }}
   IMAGE: ghcr.io/krispx2811/twenty-custom
 
 jobs:
