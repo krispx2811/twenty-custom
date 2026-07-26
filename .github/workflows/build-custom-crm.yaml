@@ -48,18 +48,24 @@ jobs:
           ref: ${{ env.TWENTY_REF }}
           path: twenty
 
-      - name: Inject Print PDF + Rial customization into index.html
+      - name: Inject Print PDF + Rial + Live alerts customizations into index.html
         run: |
           node -e '
             const fs = require("fs");
             const idx = "twenty/packages/twenty-front/index.html";
-            const inj = fs.readFileSync("fork/crm-custom/print-invoice.inject.html", "utf8");
             let html = fs.readFileSync(idx, "utf8");
             if (!html.includes("</body>")) throw new Error("no </body> found in " + idx);
-            if (html.includes("tw-print-pdf")) throw new Error("customization already present");
-            html = html.replace("</body>", inj + "\n  </body>");
+
+            const inject = (file, guard, label) => {
+              const inj = fs.readFileSync(file, "utf8");
+              if (html.includes(guard)) throw new Error(label + " already present");
+              html = html.replace("</body>", inj + "\n  </body>");
+              console.log("Injected " + label);
+            };
+            inject("fork/crm-custom/print-invoice.inject.html", "tw-print-pdf", "Print PDF + Rial");
+            inject("fork/crm-custom/alerts.inject.html", "tw-alerts-bell", "Live alerts");
+
             fs.writeFileSync(idx, html);
-            console.log("Injected customization into " + idx);
           '
 
       - name: Log in to GHCR
