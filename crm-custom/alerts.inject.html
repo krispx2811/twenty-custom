@@ -11,6 +11,10 @@
   #tw-alerts-bell svg{width:22px;height:22px}
   #tw-alerts-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;
     background:#e5484d;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;display:none}
+  #tw-alerts-enable{position:fixed;right:74px;bottom:82px;z-index:99998;background:#111827;color:#fff;
+    font-family:Inter,sans-serif;font-size:12.5px;font-weight:600;padding:9px 13px;border:none;border-radius:999px;
+    box-shadow:0 4px 14px rgba(0,0,0,.24);cursor:pointer;display:none;white-space:nowrap}
+  #tw-alerts-enable:hover{background:#000}
   #tw-alerts-panel{position:fixed;right:20px;bottom:132px;z-index:99998;width:330px;max-height:60vh;overflow:auto;
     background:#fff;border:1px solid #e6e6ea;border-radius:12px;box-shadow:0 10px 34px rgba(0,0,0,.2);
     font-family:Inter,sans-serif;display:none}
@@ -64,8 +68,20 @@
       try { const C = window.AudioContext || window.webkitAudioContext; audioCtx = new C(); audioCtx.resume(); } catch (e) {}
     }
     if ('Notification' in window && Notification.permission === 'default') {
-      try { Notification.requestPermission(); } catch (e) {}
+      try {
+        const p = Notification.requestPermission();
+        if (p && p.then) p.then(refreshEnable).catch(function () {});
+      } catch (e) {}
     }
+    refreshEnable();
+  }
+  // Alerts are "on" once audio is unlocked and notifications aren't left at the
+  // default (un-decided) state. Show a clear prompt until then.
+  function refreshEnable() {
+    const chip = document.getElementById('tw-alerts-enable');
+    if (!chip) return;
+    const notifDecided = !('Notification' in window) || Notification.permission !== 'default';
+    chip.style.display = (audioCtx && notifDecided) ? 'none' : 'block';
   }
   document.addEventListener('click', unlock, { once: false });
   document.addEventListener('keydown', unlock, { once: false });
@@ -176,13 +192,20 @@
       panel.style.display = open ? 'none' : 'block';
       if (!open) { unread = 0; renderBadge(); renderList(); }
     };
+    const enableChip = document.createElement('button');
+    enableChip.id = 'tw-alerts-enable';
+    enableChip.textContent = 'Turn on alerts';
+    enableChip.onclick = (e) => { e.stopPropagation(); unlock(); };
+
     document.body.appendChild(bell);
     document.body.appendChild(panel);
     document.body.appendChild(toasts);
+    document.body.appendChild(enableChip);
 
     document.getElementById('tw-alerts-clear').onclick = () => {
       items.length = 0; unread = 0; renderBadge(); renderList();
     };
+    refreshEnable();
   }
 
   function renderBadge() {
@@ -217,7 +240,7 @@
 
   // Boot: build UI when logged in, then poll.
   ensureUi();
-  setInterval(ensureUi, 2000);
+  setInterval(() => { ensureUi(); refreshEnable(); }, 2000);
   poll();
   setInterval(poll, POLL_MS);
 })();
