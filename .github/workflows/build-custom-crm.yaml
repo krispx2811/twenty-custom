@@ -56,10 +56,15 @@ jobs:
             let html = fs.readFileSync(idx, "utf8");
             if (!html.includes("</body>")) throw new Error("no </body> found in " + idx);
 
+            // Insert before the LAST </body>: the Print inject embeds a literal
+            // </body> inside its invoice-HTML template, so a first-match replace
+            // would splice later injections inside that script and break it.
             const inject = (file, guard, label) => {
               const inj = fs.readFileSync(file, "utf8");
               if (html.includes(guard)) throw new Error(label + " already present");
-              html = html.replace("</body>", inj + "\n  </body>");
+              const at = html.lastIndexOf("</body>");
+              if (at === -1) throw new Error("no </body> found in " + idx);
+              html = html.slice(0, at) + inj + "\n  " + html.slice(at);
               console.log("Injected " + label);
             };
             inject("fork/crm-custom/print-invoice.inject.html", "tw-print-pdf", "Print PDF + Rial");
