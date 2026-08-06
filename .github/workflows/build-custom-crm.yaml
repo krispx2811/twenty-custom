@@ -52,13 +52,25 @@ jobs:
         run: |
           node -e '
             const fs = require("fs");
-            const f = "twenty/packages/twenty-server/src/engine/metadata-modules/row-level-permission-predicate/services/row-level-permission-predicate.service.ts";
-            let s = fs.readFileSync(f, "utf8");
+            // Both the predicate service AND the group service have their own copy of
+            // the Enterprise gate. Patching only the predicate one lets writes+enforcement
+            // work but leaves group READS gated (Settings UI shows no RLS groups). Patch both.
+            const base = "twenty/packages/twenty-server/src/engine/metadata-modules/row-level-permission-predicate/services/";
+            const files = [
+              base + "row-level-permission-predicate.service.ts",
+              base + "row-level-permission-predicate-group.service.ts",
+            ];
             const needle = "    return hasValidEnterprisePlan && isRowLevelPermissionEnabled;";
-            if (!s.includes(needle)) throw new Error("RLS gate line not found - update the patch for this Twenty version");
-            s = s.replace(needle, "    return true; // ALARAIMI self-host: row-level permissions enabled");
-            fs.writeFileSync(f, s);
-            console.log("Patched RLS enterprise gate -> enabled");
+            let patched = 0;
+            for (const f of files) {
+              let s = fs.readFileSync(f, "utf8");
+              if (!s.includes(needle)) { console.log("gate already patched or absent in " + f); continue; }
+              s = s.replace(needle, "    return true; // ALARAIMI self-host: row-level permissions enabled");
+              fs.writeFileSync(f, s);
+              patched++;
+              console.log("Patched RLS enterprise gate -> enabled in " + f);
+            }
+            if (patched === 0) throw new Error("RLS gate line not found in either service - update the patch for this Twenty version");
           '
 
       - name: Inject Print PDF + Rial + Live alerts customizations into index.html
