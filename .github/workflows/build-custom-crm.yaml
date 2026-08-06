@@ -48,6 +48,19 @@ jobs:
           ref: ${{ env.TWENTY_REF }}
           path: twenty
 
+      - name: Enable row-level permissions (self-host unlock)
+        run: |
+          node -e '
+            const fs = require("fs");
+            const f = "twenty/packages/twenty-server/src/engine/metadata-modules/row-level-permission-predicate/services/row-level-permission-predicate.service.ts";
+            let s = fs.readFileSync(f, "utf8");
+            const needle = "    return hasValidEnterprisePlan && isRowLevelPermissionEnabled;";
+            if (!s.includes(needle)) throw new Error("RLS gate line not found - update the patch for this Twenty version");
+            s = s.replace(needle, "    return true; // ALARAIMI self-host: row-level permissions enabled");
+            fs.writeFileSync(f, s);
+            console.log("Patched RLS enterprise gate -> enabled");
+          '
+
       - name: Inject Print PDF + Rial + Live alerts customizations into index.html
         run: |
           node -e '
