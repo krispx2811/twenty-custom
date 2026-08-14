@@ -73,6 +73,34 @@ jobs:
             if (patched === 0) throw new Error("RLS gate line not found in either service - update the patch for this Twenty version");
           '
 
+      - name: Unlock all Enterprise features (self-host)
+        run: |
+          node -e '
+            const fs = require("fs");
+            // Master enterprise gate: EnterprisePlanService.isValid() delegates to
+            // hasValidEnterpriseValidityToken(). Forcing an early return true unlocks
+            // SSO/SAML, custom domain, audit logs, email domain, unlimited workspaces
+            // and the AI admin UI (billing is already disabled on self-host, so the
+            // billing-entitlement checks already pass).
+            const f = "twenty/packages/twenty-server/src/engine/core-modules/enterprise/services/enterprise-plan.service.ts";
+            let s = fs.readFileSync(f, "utf8");
+            const gates = [
+              ["hasValidEnterpriseValidityToken(): boolean {", "ALARAIMI enterprise unlock"],
+              ["hasValidSignedEnterpriseKey(): boolean {", "ALARAIMI enterprise key"],
+            ];
+            let patched = 0;
+            for (const g of gates) {
+              const sig = g[0], tag = g[1];
+              if (!s.includes(sig)) { console.log("signature not found: " + sig); continue; }
+              if (s.includes(tag)) { console.log("already patched: " + tag); patched++; continue; }
+              s = s.replace(sig, sig + "\n    return true; // " + tag);
+              patched++;
+              console.log("Patched enterprise gate -> " + tag);
+            }
+            if (patched === 0) throw new Error("enterprise gate methods not found - update the patch for this Twenty version");
+            fs.writeFileSync(f, s);
+          '
+
       - name: Inject Print PDF + Rial + Live alerts customizations into index.html
         run: |
           node -e '
