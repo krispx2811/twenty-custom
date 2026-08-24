@@ -1,0 +1,69 @@
+diff --git a/packages/twenty-front/src/modules/object-record/record-table/utils/buildValueFromFilter.ts b/packages/twenty-front/src/modules/object-record/record-table/utils/buildValueFromFilter.ts
+index 7de3a1c7..3d0aff06 100644
+--- a/packages/twenty-front/src/modules/object-record/record-table/utils/buildValueFromFilter.ts
++++ b/packages/twenty-front/src/modules/object-record/record-table/utils/buildValueFromFilter.ts
+@@ -268,13 +268,10 @@ const computeValueFromFilterRelation = (
+         if (parsedValue?.isCurrentRecordSelected) {
+           return currentRecordId;
+         }
+-        if (label === 'Assignee') {
+-          return parsedValue?.isCurrentWorkspaceMemberSelected
+-            ? currentWorkspaceMember?.id
+-            : undefined;
+-        } else {
+-          return parsedValue?.selectedRecordIds?.[0];
++        if (parsedValue?.isCurrentWorkspaceMemberSelected) {
++          return currentWorkspaceMember?.id;
+         }
++        return parsedValue?.selectedRecordIds?.[0];
+       }
+       return undefined; // todo
+     }
+@@ -302,10 +299,33 @@ const computeValueFromFilterTSVector = (
+ const computeValueFromFilterUUID = (
+   operand: RecordFilterToRecordInputOperand<'UUID'>,
+   value: string,
++  currentWorkspaceMember?: CurrentWorkspaceMember,
+ ) => {
+   switch (operand) {
+-    case ViewFilterOperand.IS:
++    case ViewFilterOperand.IS: {
++      // A UUID filter value can be a plain id string, or a relation-style
++      // selection object ({ isCurrentWorkspaceMemberSelected, selectedRecordIds })
++      // used by "current member" record-level rules on actor subfields like
++      // createdBy.workspaceMemberId. Resolve the latter instead of leaking the
++      // raw JSON into a UUID slot (which throws "Invalid UUID").
++      const parsedValue = parseJson<{
++        isCurrentWorkspaceMemberSelected?: boolean;
++        selectedRecordIds?: string[];
++      }>(value);
++      if (
++        parsedValue &&
++        typeof parsedValue === 'object' &&
++        !Array.isArray(parsedValue)
++      ) {
++        if (parsedValue.isCurrentWorkspaceMemberSelected) {
++          return currentWorkspaceMember?.id;
++        }
++        if (Array.isArray(parsedValue.selectedRecordIds)) {
++          return parsedValue.selectedRecordIds[0];
++        }
++      }
+       return value;
++    }
+     case ViewFilterOperand.IS_NOT:
+     case ViewFilterOperand.IS_EMPTY:
+     case ViewFilterOperand.IS_NOT_EMPTY:
+@@ -390,10 +410,11 @@ const VALUE_HANDLER_REGISTRY: Partial<Record<FieldMetadataType, ValueHandler>> =
+         operand as RecordFilterToRecordInputOperand<'TS_VECTOR'>,
+         value,
+       ),
+-    [FieldMetadataType.UUID]: ({ operand, value }) =>
++    [FieldMetadataType.UUID]: ({ operand, value, currentWorkspaceMember }) =>
+       computeValueFromFilterUUID(
+         operand as RecordFilterToRecordInputOperand<'UUID'>,
+         value,
++        currentWorkspaceMember,
+       ),
+   };
+ 

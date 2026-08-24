@@ -126,6 +126,17 @@ jobs:
             fs.writeFileSync(idx, html);
           '
 
+      - name: Fix RLS record-input current-member resolution (lead create bug)
+        run: |
+          # Twenty front-end bug: when a restricted role creates a record, it pre-fills
+          # fields from the row-level rules but fails to resolve the "current member"
+          # value for actor subfields (createdBy.workspaceMemberId) and non-"Assignee"
+          # relations (ownerUser). The raw {isCurrentWorkspaceMemberSelected:true} leaks
+          # into a UUID slot -> "Invalid UUID" -> create fails for every restricted role.
+          cd twenty
+          git apply --verbose ../fork/crm-custom/fix-rls-record-input-current-member.patch
+          echo "Applied RLS record-input current-member resolution fix"
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
