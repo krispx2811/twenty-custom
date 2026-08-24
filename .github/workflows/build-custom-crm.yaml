@@ -1,6 +1,6 @@
 name: Build custom CRM image
 
-# Builds Twenty v2.22.0 from upstream + the CRMALARAMI customizations and pushes
+# Builds Twenty v2.23.0 from upstream + the CRMALARAMI customizations and pushes
 # the image to GHCR. Railway pulls this image instead of the stock twentycrm/twenty.
 # This repo holds only the build recipe + UI overlay - no secrets, no data.
 
@@ -14,7 +14,7 @@ on:
     inputs:
       twenty_ref:
         description: Twenty version tag to build from
-        default: twenty/v2.22.0
+        default: twenty/v2.23.0
         required: true
 
 permissions:
@@ -22,7 +22,7 @@ permissions:
   packages: write
 
 env:
-  TWENTY_REF: ${{ github.event.inputs.twenty_ref || 'twenty/v2.22.0' }}
+  TWENTY_REF: ${{ github.event.inputs.twenty_ref || 'twenty/v2.23.0' }}
   IMAGE: ghcr.io/krispx2811/twenty-custom
 
 jobs:
@@ -145,9 +145,9 @@ jobs:
           push: true
           provenance: false
           tags: |
-            ${{ env.IMAGE }}:2.22.0
-            ${{ env.IMAGE }}:2.22.0-${{ github.run_number }}
+            ${{ env.IMAGE }}:2.23.0
+            ${{ env.IMAGE }}:2.23.0-${{ github.run_number }}
 
       - name: Summary
         run: |
-          echo "Pushed ${{ env.IMAGE }}:2.22.0 and :2.22.0-${{ github.run_number }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed ${{ env.IMAGE }}:2.23.0 and :2.23.0-${{ github.run_number }}" >> "$GITHUB_STEP_SUMMARY"
